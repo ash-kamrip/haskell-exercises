@@ -20,7 +20,6 @@ It's absolutely okay if you feel that your implementations are not
 perfect. You can return to these exercises after future lectures and
 improve your solutions if you see any possible improvements.
 -}
-
 module Lecture1
     ( makeSnippet
     , sumOfSquares
@@ -39,6 +38,8 @@ module Lecture1
 its behaviour, possible types for the function arguments and write the
 type signature explicitly.
 -}
+
+makeSnippet :: Int -> [Char] -> [Char]
 makeSnippet limit text = take limit ("Description: " ++ text) ++ "..."
 
 {- | Implement a function that takes two numbers and finds sum of
@@ -54,7 +55,10 @@ Explanation: @sumOfSquares 3 4@ should be equal to @9 + 16@ and this
 is 25.
 -}
 -- DON'T FORGET TO SPECIFY THE TYPE IN HERE
-sumOfSquares x y = error "TODO!"
+
+
+sumOfSquares :: Int -> Int -> Int
+sumOfSquares x y = (x)*(x) + (y)*(y)
 
 {- | Implement a function that returns the last digit of a given number.
 
@@ -67,7 +71,10 @@ sumOfSquares x y = error "TODO!"
 
 -}
 -- DON'T FORGET TO SPECIFY THE TYPE IN HERE
-lastDigit n = error "lastDigit: Not implemented!"
+lastDigit :: Integral a => a -> a
+lastDigit n
+    | n < 0 = mod (n * (-1)) 10
+    | n >= 0 = mod n 10
 
 {- | Write a function that takes three numbers and returns the
 difference between the biggest number and the smallest one.
@@ -81,7 +88,15 @@ and 1 is the smallest, and 7 - 1 = 6.
 Try to use local variables (either let-in or where) to implement this
 function.
 -}
-minmax x y z = error "TODO"
+
+minmax :: (Num a, Ord a) => a -> a -> a -> a
+minmax x y z = 
+    let large = if x > y then x else y 
+        largest = if large > z then large else z 
+        small = if x < y then x else y 
+        smallest = if small < z then small else z 
+    in largest - smallest
+    
 
 {- | Implement a function that takes a string, start and end positions
 and returns a substring of a given string from the start position to
@@ -89,6 +104,7 @@ the end (including).
 
 >>> subString 3 7 "Hello, world!"
 "lo, w"
+
 
 >>> subString 10 5 "Some very long String"
 ""
@@ -98,7 +114,8 @@ start position can be considered as zero (e.g. substring from the
 first character) and negative end position should result in an empty
 string.
 -}
-subString start end str = error "TODO"
+subString :: Int -> Int -> [a] -> [a]
+subString start end str = drop start ( take (end+1) str )
 
 {- | Write a function that takes a String — space separated numbers,
 and finds a sum of the numbers inside this string.
@@ -108,7 +125,8 @@ and finds a sum of the numbers inside this string.
 
 The string contains only spaces and/or numbers.
 -}
-strSum str = error "TODO"
+strSum :: String -> Int
+strSum str = sum (map read (words str) :: [Int])
 
 {- | Write a function that takes a number and a list of numbers and
 returns a string, saying how many elements of the list are strictly
@@ -123,4 +141,16 @@ and lower than 6 elements (4, 5, 6, 7, 8 and 9).
 
 🕯 HINT: Use recursion to implement this function.
 -}
-lowerAndGreater n list = error "TODO"
+lowerAndGreater :: Int -> [Int] -> [Char]
+lowerAndGreater n list = go 0 0 list 
+    where 
+        go :: Int -> Int->[Int] -> [Char]
+        go higher smaller l = 
+            if null l   -- list finally becomes empty
+                then show n ++ " is greater than " ++ show smaller ++ " elements and lower than " ++ show higher ++ " elements"
+        -- result can be sent to user finally
+                else if head l > n
+                    then go (higher + 1) smaller (tail l)
+                    else if head l == n 
+                        then go higher smaller (tail l)
+                        else go higher (smaller + 1) (tail l)
