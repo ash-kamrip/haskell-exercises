@@ -73,7 +73,7 @@ sumOfSquares x y = x*x + y*y
 -- DON'T FORGET TO SPECIFY THE TYPE IN HERE
 
 lastDigit :: Integral a => a -> a
-lastDigit n = mod (abs n) 10
+lastDigit n = abs n `mod` 10 
 
 
 {- | Write a function that takes three numbers and returns the
@@ -108,8 +108,15 @@ start position can be considered as zero (e.g. substring from the
 first character) and negative end position should result in an empty
 string.
 -}
-subString :: Int -> Int -> [a] -> [a]
-subString start end str = drop start ( take (end + 1) str )
+
+-- subString start end str = drop start ( take (end + 1) str )
+
+subString :: Int -> Int -> [Char] -> [Char]
+subString start end str 
+    | end < 0 = ""
+    | start < 0 = subString 0 end str
+    | end < start = ""
+    | otherwise = take (end - start + 1) ( drop start str)
 
 {- | Write a function that takes a String — space separated numbers,
 and finds a sum of the numbers inside this string.
