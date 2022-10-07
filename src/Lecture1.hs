@@ -58,7 +58,7 @@ is 25.
 
 
 sumOfSquares :: Int -> Int -> Int
-sumOfSquares x y = (x)*(x) + (y)*(y)
+sumOfSquares x y = x*x + y*y
 
 {- | Implement a function that returns the last digit of a given number.
 
@@ -71,10 +71,10 @@ sumOfSquares x y = (x)*(x) + (y)*(y)
 
 -}
 -- DON'T FORGET TO SPECIFY THE TYPE IN HERE
+
 lastDigit :: Integral a => a -> a
-lastDigit n
-    | n < 0 = mod (n * (-1)) 10
-    | n >= 0 = mod n 10
+lastDigit n = mod (abs n) 10
+
 
 {- | Write a function that takes three numbers and returns the
 difference between the biggest number and the smallest one.
@@ -90,13 +90,7 @@ function.
 -}
 
 minmax :: (Num a, Ord a) => a -> a -> a -> a
-minmax x y z = 
-    let large = if x > y then x else y 
-        largest = if large > z then large else z 
-        small = if x < y then x else y 
-        smallest = if small < z then small else z 
-    in largest - smallest
-    
+minmax x y z = max ( max x y ) z - min ( min x y ) z
 
 {- | Implement a function that takes a string, start and end positions
 and returns a substring of a given string from the start position to
@@ -115,7 +109,7 @@ first character) and negative end position should result in an empty
 string.
 -}
 subString :: Int -> Int -> [a] -> [a]
-subString start end str = drop start ( take (end+1) str )
+subString start end str = drop start ( take (end + 1) str )
 
 {- | Write a function that takes a String — space separated numbers,
 and finds a sum of the numbers inside this string.
@@ -126,7 +120,7 @@ and finds a sum of the numbers inside this string.
 The string contains only spaces and/or numbers.
 -}
 strSum :: String -> Int
-strSum str = sum (map read (words str) :: [Int])
+strSum str = sum (map read (words str))
 
 {- | Write a function that takes a number and a list of numbers and
 returns a string, saying how many elements of the list are strictly
@@ -142,15 +136,15 @@ and lower than 6 elements (4, 5, 6, 7, 8 and 9).
 🕯 HINT: Use recursion to implement this function.
 -}
 lowerAndGreater :: Int -> [Int] -> [Char]
-lowerAndGreater n list = go 0 0 list 
-    where 
+lowerAndGreater n list = go 0 0 list
+    where
         go :: Int -> Int->[Int] -> [Char]
-        go higher smaller l = 
+        go higher smaller l =
             if null l   -- list finally becomes empty
                 then show n ++ " is greater than " ++ show smaller ++ " elements and lower than " ++ show higher ++ " elements"
         -- result can be sent to user finally
                 else if head l > n
                     then go (higher + 1) smaller (tail l)
-                    else if head l == n 
+                    else if head l == n
                         then go higher smaller (tail l)
                         else go higher (smaller + 1) (tail l)
