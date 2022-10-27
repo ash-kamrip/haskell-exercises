@@ -58,10 +58,11 @@ zero, you can stop calculating product and return 0 immediately.
 
 
 lazyProduct :: [Int] -> Int
-lazyProduct list = go 1 list
+lazyProduct = go 1
   where
-    go acc [] = acc
-    go acc (x:xs) = if x == 0 then go 0 [] else go ( acc * x )  xs
+    go acc []  = acc
+    go _ (0:_) = 0
+    go acc (x:xs) = go ( acc * x )  xs
 
 
 {- | Implement a function that duplicates every element in the list.
@@ -72,7 +73,8 @@ lazyProduct list = go 1 list
 "ccaabb"
 -}
 duplicate :: [a] -> [a]
-duplicate list = concat [ replicate 2 x  | x <- list ]
+duplicate [] = []
+duplicate (x:xs) = x : x : duplicate xs
 
 {- | Implement function that takes index and a list and removes the
 element at the given position. Additionally, this function should also
@@ -85,14 +87,18 @@ return the removed element.
 (Nothing,[1,2,3,4,5])
 -}
 
+
 removeAt :: Int -> [a] -> (Maybe a, [a])
 removeAt _ [] = (Nothing,[])
 removeAt 1 [x] = ( Nothing,[x])
 removeAt n list
   | n < 0 = (Nothing, list)
-  | otherwise = ( Just (list !! n), ( take n list ++ drop (n+1) list))
-
--- 1 test case failing 
+  | otherwise = ( first (drop n list), take n list ++ last ( drop n list))
+    where
+      first [] = Nothing
+      first l = Just (head l)
+      last [] = []
+      last ll = tail ll
 
 {- | Write a function that takes a list of lists and returns only
 lists of even lengths.
@@ -123,7 +129,7 @@ spaces.
 -}
 
 dropSpaces :: [Char] -> [Char]
-dropSpaces list = filter ( \x -> x /= ' ') list
+dropSpaces list = takeWhile (/= ' ') (dropWhile (== ' ') list)
 
 {- |
 
@@ -191,40 +197,50 @@ data Chest a = Chest
     chestGold :: Int
     ,chestTreasure :: a
   }
-data Dragon a = Dragon
+
+type Armor = Int
+type HealthPotion = Int
+
+type RedChest = Chest Armor
+type BlackChest = Chest (Armor, HealthPotion)
+type GreenChest = Chest 
+type EmptyChest = Int 
+
+data RewardChest = RedChest | BlackChest | GreenChest | EmptyChest
+
+data Dragon = Dragon
   {
     dragonColor :: String ,
     dragonHealth :: Int,
     dragonFirePower :: Int,
     dragonExpPoints :: Int,
-    dragonChest :: Chest a
+    dragonChest :: RewardChest 
   }
 
 data DragonType = RedDragon | BlackDragon | GreenDragon
 
-type Armor = Int 
-type HealthPotion = Int 
 
-dragon :: DragonType -> Dragon (a, b)
+dragon :: DragonType -> Dragon
 dragon d = case d of
-  RedDragon -> Dragon "Red" 100 500 15 (Chest 100 Armor)
-  BlackDragon -> Dragon "Black" 150 500 15 ( Chest 100 (Armor, HealthPotion))
-  GreenDragon -> Dragon "Green" 250 500 15 ( Chest 100 0)
+  RedDragon -> Dragon "Red" 100 500 15 RedChest
+  BlackDragon -> Dragon "Black" 150 500 15 BlackChest
+  GreenDragon -> Dragon "Green" 250 500 15 GreenChest
 
 -- updating the health and endurance of knight
 updateKnight :: Int -> Int -> Knight -> Knight
-updateKnight h e knight = Knight { knightHealth = h , knightAttack = (knightAttack knight), knightEndurance = e }
+updateKnight h e knight = Knight { knightHealth = h , knightAttack = knightAttack knight, knightEndurance = e }
 
 -- updating the health of dragon
-updateHealthOfDragon :: Int -> Dragon a -> Dragon a
-updateHealthOfDragon h d = Dragon {dragonColor = (dragonColor d), dragonHealth = h , dragonFirePower = (dragonFirePower d), dragonExpPoints = (dragonExpPoints d), dragonChest = (dragonChest d)}
+updateHealthOfDragon :: Int -> Dragon -> Dragon 
+updateHealthOfDragon h d = Dragon {dragonColor = dragonColor d, dragonHealth = h , dragonFirePower = dragonFirePower d, dragonExpPoints = dragonExpPoints d, dragonChest = dragonChest d}
 
-dragonFight :: Knight -> Dragon a -> (Chest a, Int)
+
+dragonFight :: Knight -> Dragon -> (RewardChest, Int)
 dragonFight k d
   | dragonHealth d  <= 0       = (dragonChest d , dragonExpPoints d )
-  | knightHealth k  <=0        = "knight Lose"
-  | knightEndurance k  <= 0    = "knight has to run away"
-  | otherwise = dragonFight (updateKnight (knightHealth k - dragonFirePower d) (knightEndurance k - 10 ) k ) (updateHealthOfDragon (dragonHealth d - (10*(knightAttack k ))) d )
+  | knightHealth k  <=0        = ( EmptyChest , 0 ) -- knight lose
+  | knightEndurance k  <= 0    = ( EmptyChest , 0 ) -- knight has to run away.
+  | otherwise = dragonFight (updateKnight (knightHealth k - dragonFirePower d) (knightEndurance k - 10 ) k ) (updateHealthOfDragon (dragonHealth d - (10*knightAttack k)) d )
 
 
 ----------------------------------------------------------------------------
