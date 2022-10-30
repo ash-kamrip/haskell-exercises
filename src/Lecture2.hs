@@ -16,6 +16,8 @@ Unlike exercises to Lecture 1, this module also contains more
 challenging exercises. You don't need to solve them to finish the
 course but you can if you like challenges :)
 -}
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
+{-# OPTIONS_GHC -Wno-deferred-out-of-scope-variables #-}
 
 module Lecture2
     ( -- * Normal
@@ -39,9 +41,11 @@ module Lecture2
     , eval
     , constantFolding
     ) where
+import Data.Monoid (Any)
+
 
 -- VVV If you need to import libraries, do it after this line ... VVV
-
+{-# LANGUAGE NoMonomorphismRestriction #-}
 -- ^^^ and before this line. Otherwise the test suite might fail  ^^^
 
 {- | Implement a function that finds a product of all the numbers in
@@ -51,8 +55,15 @@ zero, you can stop calculating product and return 0 immediately.
 >>> lazyProduct [4, 3, 7]
 84
 -}
+
+
 lazyProduct :: [Int] -> Int
-lazyProduct = error "TODO"
+lazyProduct = go 1
+  where
+    go acc []  = acc
+    go _ (0:_) = 0
+    go acc (x:xs) = go ( acc * x )  xs
+
 
 {- | Implement a function that duplicates every element in the list.
 
@@ -62,7 +73,8 @@ lazyProduct = error "TODO"
 "ccaabb"
 -}
 duplicate :: [a] -> [a]
-duplicate = error "TODO"
+duplicate [] = []
+duplicate (x:xs) = x : x : duplicate xs
 
 {- | Implement function that takes index and a list and removes the
 element at the given position. Additionally, this function should also
@@ -74,7 +86,19 @@ return the removed element.
 >>> removeAt 10 [1 .. 5]
 (Nothing,[1,2,3,4,5])
 -}
-removeAt = error "TODO"
+
+
+removeAt :: Int -> [a] -> (Maybe a, [a])
+removeAt _ [] = (Nothing,[])
+removeAt 1 [x] = ( Nothing,[x])
+removeAt n list
+  | n < 0 = (Nothing, list)
+  | otherwise = ( first (drop n list), take n list ++ last ( drop n list))
+    where
+      first [] = Nothing
+      first l = Just (head l)
+      last [] = []
+      last ll = tail ll
 
 {- | Write a function that takes a list of lists and returns only
 lists of even lengths.
@@ -85,7 +109,9 @@ lists of even lengths.
 ♫ NOTE: Use eta-reduction and function composition (the dot (.) operator)
   in this function.
 -}
-evenLists = error "TODO"
+
+evenLists :: [[a]] -> [[a]]
+evenLists list = filter ( even.length) list
 
 {- | The @dropSpaces@ function takes a string containing a single word
 or number surrounded by spaces and removes all leading and trailing
@@ -101,7 +127,9 @@ spaces.
 
 🕯 HINT: look into Data.Char and Prelude modules for functions you may use.
 -}
-dropSpaces = error "TODO"
+
+dropSpaces :: [Char] -> [Char]
+dropSpaces list = takeWhile (/= ' ') (dropWhile (== ' ') list)
 
 {- |
 
@@ -164,7 +192,56 @@ data Knight = Knight
     , knightEndurance :: Int
     }
 
-dragonFight = error "TODO"
+data Chest a = Chest
+  {
+    chestGold :: Int
+    ,chestTreasure :: a
+  }
+
+type Armor = Int
+type HealthPotion = Int
+
+type RedChest = Chest Armor
+type BlackChest = Chest (Armor, HealthPotion)
+type GreenChest = Chest 
+type EmptyChest = Int 
+
+data RewardChest = RedChest | BlackChest | GreenChest | EmptyChest
+
+data Dragon = Dragon
+  {
+    dragonColor :: String ,
+    dragonHealth :: Int,
+    dragonFirePower :: Int,
+    dragonExpPoints :: Int,
+    dragonChest :: RewardChest 
+  }
+
+data DragonType = RedDragon | BlackDragon | GreenDragon
+
+
+dragon :: DragonType -> Dragon
+dragon d = case d of
+  RedDragon -> Dragon "Red" 100 500 15 RedChest
+  BlackDragon -> Dragon "Black" 150 500 15 BlackChest
+  GreenDragon -> Dragon "Green" 250 500 15 GreenChest
+
+-- updating the health and endurance of knight
+updateKnight :: Int -> Int -> Knight -> Knight
+updateKnight h e knight = Knight { knightHealth = h , knightAttack = knightAttack knight, knightEndurance = e }
+
+-- updating the health of dragon
+updateHealthOfDragon :: Int -> Dragon -> Dragon 
+updateHealthOfDragon h d = Dragon {dragonColor = dragonColor d, dragonHealth = h , dragonFirePower = dragonFirePower d, dragonExpPoints = dragonExpPoints d, dragonChest = dragonChest d}
+
+
+dragonFight :: Knight -> Dragon -> (RewardChest, Int)
+dragonFight k d
+  | dragonHealth d  <= 0       = (dragonChest d , dragonExpPoints d )
+  | knightHealth k  <=0        = ( EmptyChest , 0 ) -- knight lose
+  | knightEndurance k  <= 0    = ( EmptyChest , 0 ) -- knight has to run away.
+  | otherwise = dragonFight (updateKnight (knightHealth k - dragonFirePower d) (knightEndurance k - 10 ) k ) (updateHealthOfDragon (dragonHealth d - (10*knightAttack k)) d )
+
 
 ----------------------------------------------------------------------------
 -- Extra Challenges
